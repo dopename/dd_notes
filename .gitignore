@@ -1,0 +1,5 @@
+dist/*
+dd_notes.egg-info/*
+build/*
+__pycache__
+.pypirc

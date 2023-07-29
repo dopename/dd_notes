@@ -1,0 +1,51 @@
+<!-- TODO - FIGURE OUT A WAY TO SET TABLE ROWS WITH NEEDED DATA-TARGET -->
+
+<div class="card">
+    <div class="card-body">
+        <h1>Notes</h1>
+        <div id="noteContainer" style="overflow-y:scroll;max-height:400px;">
+            <h5 class="text-muted text-center">No record selected</h5>
+        </div>
+        <div id="noteFormWrapper" class="d-none pt-3">
+            <form method="POST" id="noteForm">
+                {{form|crispy}}
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'dd_notes/index.js' %}"></script>
+
+<script>
+    function configureTable(tableId, fieldIndex) {
+        let table = document.getElementById(tableId);
+        let tbody = table.querySelector('tbody');
+        let rows = tbody.querySelectorAll('tr');
+        let lookupFieldIndex = parseInt(fieldIndex);
+        
+        for (row in rows) {
+            row.dataset.target = row.children[lookupFieldIndex].innerText;
+        }
+    }
+
+    $(document).ready( function () {
+        let table = document.getElementById('side-note-table');
+        let noteForm = document.getElementById('noteForm');
+        let noteFormWrapper = document.getElementById('noteFormWrapper');
+        let relatedObjectField = document.getElementById('id_contact');
+        let noteContainer = document.getElementById('noteContainer');
+        let url = "";
+        let getParam = "pk";
+        let sideNoteOptions = {}
+
+        let sideNote = new SideNote(
+            table, noteForm, noteFormWrapper, relatedObjectField, 
+            noteContainer, url, getParam, options=sideNoteOptions
+        );
+
+        let tableId = "{{table_id}}";
+        let lookupFieldIndex = "{{lookup_field_index}}";
+    })
+</script>
