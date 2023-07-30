@@ -45,20 +45,31 @@ def parse_notes_model_fields(note_model, related_model):
     timestamp_field = None
     user_field = None
     related_field = None
+    errors = []
 
     for field in note_model._meta.get_fields():
-        if field.get_internal_type() == 'DateTimeField' and not timestamp_field:
+        if type(field) == models.DateTimeField and not timestamp_field:
             timestamp_field = field.name
-        elif field.get_internal_type() == 'ForeignKey' and field.related_model == get_user_model() and not user_field:
+        elif type(field) == models.ForeignKey and field.remote_field.model == get_user_model() and not user_field:
             user_field = field.name
-        elif type(field) == ManyToOneRel and field.related_model == related_model and not related_field:
-            related_field = field.name
 
-        if user_field and timestamp_field and related_field:
+        if user_field and timestamp_field:
             break
 
+    for field in related_model._meta.get_fields():
+        if type(field) == ManyToOneRel and field.related_model == note_model:
+            related_field = field.name
+            break
+
+    if not timestamp_field:
+        errors.append('timestamp_field')
+    if not user_field:
+        errors.append('user_field')
+    if not related_field:
+        errors.append('related_field')
+
     if None in [timestamp_field, user_field, related_field]:
-        raise Exception('Names are not valid for the Note model')
+        raise Exception('Names are not valid for the Note model. Issues with the following fields: ' + ', '.join(errors) + '.')
 
     return {
         'text_field': text_field,

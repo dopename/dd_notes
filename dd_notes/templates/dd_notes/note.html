@@ -1,5 +1,6 @@
 <!-- TODO - FIGURE OUT A WAY TO SET TABLE ROWS WITH NEEDED DATA-TARGET -->
-
+{% load crispy_forms_tags %}
+{% load static %}
 <div class="card">
     <div class="card-body">
         <h1>Notes</h1>
@@ -47,5 +48,7 @@
 
         let tableId = "{{table_id}}";
         let lookupFieldIndex = "{{lookup_field_index}}";
+
+        configureTable(tableId, lookupFieldIndex);
     })
 </script>
