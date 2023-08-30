@@ -167,7 +167,7 @@ class NoteViewMixin:
                 if not hasattr(self, variable):
                     raise Exception(f"NoteViewMixin requires {variable} to be set.")
             
-        super().__init__()
+        super().__init__(**kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -227,6 +227,7 @@ class NoteViewMixin:
 
     def post(self, request, *args, **kwargs):
         form = self.note_form_class(request.POST)
+        text_field = False
 
         if self.notes_field:
             # This is a text field
@@ -235,13 +236,17 @@ class NoteViewMixin:
                 notes = getattr(obj, self.notes_field.name)
                 # Essentially for Array/Json field we want to use array. Just json.load if its text
                 if type(notes) == str:
+                    text_field = True
                     notes = json.loads(notes)
                 elif type(notes) != list:
                     notes = []
 
                 form_text = form.cleaned_data['text']
                 notes.append(self.create_note_field_json(form_text))
-
+                
+                if text_field:
+                    notes = json.dumps(notes)
+                    
                 setattr(obj, self.notes_field.name, notes)
                 obj.save()
                 return JsonResponse({'notes':notes}, status=200)

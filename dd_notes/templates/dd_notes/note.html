@@ -26,12 +26,18 @@
         let rows = tbody.querySelectorAll('tr');
         let lookupFieldIndex = parseInt(fieldIndex);
         
-        for (row in rows) {
+        for (let i = 0; i < rows.length; i++) {
+            let row = rows[i];
             row.dataset.target = row.children[lookupFieldIndex].innerText;
         }
     }
 
     $(document).ready( function () {
+        let tableId = "{{table_id}}";
+        let lookupFieldIndex = "{{lookup_field_index}}";
+        
+        configureTable(tableId, lookupFieldIndex);
+
         let table = document.getElementById('side-note-table');
         let noteForm = document.getElementById('noteForm');
         let noteFormWrapper = document.getElementById('noteFormWrapper');
@@ -45,10 +51,5 @@
             table, noteForm, noteFormWrapper, relatedObjectField, 
             noteContainer, url, getParam, options=sideNoteOptions
         );
-
-        let tableId = "{{table_id}}";
-        let lookupFieldIndex = "{{lookup_field_index}}";
-
-        configureTable(tableId, lookupFieldIndex);
     })
 </script>
