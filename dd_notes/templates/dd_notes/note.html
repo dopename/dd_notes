@@ -41,7 +41,12 @@
         let table = document.getElementById('side-note-table');
         let noteForm = document.getElementById('noteForm');
         let noteFormWrapper = document.getElementById('noteFormWrapper');
-        let relatedObjectField = document.getElementById('id_contact');
+        let relatedObjectField = document.getElementById('id_related_object');
+
+        if (relatedObjectField === undefined) {
+            relatedObjectField = document.getElementById('id_contact');
+        }
+        
         let noteContainer = document.getElementById('noteContainer');
         let url = "";
         let getParam = "pk";

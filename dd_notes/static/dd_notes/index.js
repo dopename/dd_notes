@@ -64,7 +64,7 @@ class SideNote {
         this.url = url;
         
         if (getParam == null) {
-            this.getParam = 'id';
+            this.getParam = 'pk';
         } else {
             this.getParam = getParam;
         }
@@ -97,7 +97,7 @@ class SideNote {
                     }
 
                     rows.forEach(function(r) {
-                        r.style.backgroundColor = "#FFFFFF";
+                        r.style.backgroundColor = "inherit";
                     })
                     row.style.backgroundColor = "#87CEEB";
 

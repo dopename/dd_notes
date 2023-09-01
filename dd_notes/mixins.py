@@ -11,9 +11,10 @@ from django.db.models.fields.reverse_related import ManyToOneRel
 from django.db import models
 
 from django.contrib.postgres.fields import ArrayField
+import ast
 
 
-def get_related_model_by_name(model, names: list =[]):
+def get_related_model_by_name(model, names: list=[]):
     """
     Given a model, return the name of the related model
     """
@@ -105,6 +106,13 @@ class NoteViewMixin:
             'note_timestamp_field_name'
         ]
 
+
+        # small function to cleanly handle set-if-not-passed logic
+        def get_or_set(property, value):
+            if not hasattr(self, property):
+                setattr(self, property, value)
+            return getattr(self, property)
+
         # Allow to set variables on call
         for key, value in kwargs.items():
             if key in required_variables:
@@ -116,6 +124,9 @@ class NoteViewMixin:
         self.notes_field = None
         self.mode = 'model'
 
+        self.note_get_param = get_or_set('note_get_param', 'pk')
+        self.model_lookup_field = get_or_set('model_lookup_field', 'pk')
+
         if not self.note_model:
             # Sounds like notes is just a JSON or text field
             try:
@@ -125,6 +136,7 @@ class NoteViewMixin:
             else:
                 if not getattr(self, 'note_form_class', None):
                     class NoteForm(forms.Form):
+                        related_object = forms.IntegerField(widget=forms.HiddenInput())
                         text = forms.CharField()
 
                     self.note_form_class = NoteForm
@@ -138,19 +150,10 @@ class NoteViewMixin:
                     self.mode = 'list'
                 else:
                     raise Exception("Must be a big CharField, I'll think about letting them in in the future.")
-        else:
-
-            # small function to cleanly handle set-if-not-passed logic
-            def get_or_set(property, value):
-                if not hasattr(self, property):
-                    setattr(self, property, value)
-                return getattr(self, property)
-            
+        else:            
             fields = parse_notes_model_fields(self.note_model, self.model)
             # Will need to figure out get_param and related_object_lookup later.. maybe by looking at urlpatterns?
-            self.note_get_param = get_or_set('note_get_param', 'pk')
             self.note_relation_name = get_or_set('note_relation_name', fields['related_field'])
-            self.model_lookup_field = get_or_set('model_lookup_field', 'pk')
             self.note_user_field = get_or_set('note_user_field', fields['user_field'])
             self.note_text_field = get_or_set('note_text_field', fields['text_field'])
             self.note_timestamp_field = get_or_set('note_timestamp_field', fields['timestamp_field'])
@@ -199,13 +202,13 @@ class NoteViewMixin:
         else:
             # Json/Array Field handling
             try:
-                obj = self.model.objets.get(**lookup)
+                obj = self.model.objects.get(**lookup)
             except self.model.DoesNotExist:
                 return JsonResponse({}, status=400)
             else:
                 notes = getattr(obj, self.notes_field.name)
 
-        return JsonResponse({'notes': notes}, status=200)
+        return JsonResponse({'notes': ast.literal_eval(notes)}, status=200)
 
 
     def format_note_json(self, note):
@@ -237,19 +240,21 @@ class NoteViewMixin:
                 # Essentially for Array/Json field we want to use array. Just json.load if its text
                 if type(notes) == str:
                     text_field = True
-                    notes = json.loads(notes)
+                    notes = ast.literal_eval(notes)
                 elif type(notes) != list:
                     notes = []
 
                 form_text = form.cleaned_data['text']
-                notes.append(self.create_note_field_json(form_text))
+                note = self.create_note_field_json(form_text)
+                notes.append(note)
                 
                 if text_field:
-                    notes = json.dumps(notes)
-                    
-                setattr(obj, self.notes_field.name, notes)
+                    setattr(obj, self.notes_field.name, json.dumps(notes))
+                else:
+                    setattr(obj, self.notes_field.name, notes)
                 obj.save()
-                return JsonResponse({'notes':notes}, status=200)
+
+                return JsonResponse(note, status=200)
             return JsonResponse({'errors':form.errors}, status=400)
 
         if form.is_valid():
